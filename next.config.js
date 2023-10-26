@@ -5,6 +5,6 @@ module.exports = {
   images: {
     unoptimized: true
   },
-  assetPrefix: '/',
-  distDir: 'out',
+  output: "export",
+  assetPrefix: '/'
 }
