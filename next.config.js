@@ -6,4 +6,5 @@ module.exports = {
     unoptimized: true
   },
   assetPrefix: '/',
+  distDir: 'out',
 }
