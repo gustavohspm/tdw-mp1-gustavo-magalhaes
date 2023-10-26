@@ -41,6 +41,9 @@ jobs:
         run: npm run lint
 
       - name: Run test command
+        env:
+          CONTENTFUL_SPACE_ID: ${{ secrets.CONTENTFUL_SPACE_ID }}
+          CONTENTFUL_ACCESS_TOKEN: ${{ secrets.CONTENTFUL_ACCESS_TOKEN }}
         run: npm run test
 
   cd-build:
@@ -73,6 +76,9 @@ jobs:
         run: npm ci
 
       - name: Run build & export command (if not cached)
+        env:
+          CONTENTFUL_SPACE_ID: ${{ secrets.CONTENTFUL_SPACE_ID }}
+          CONTENTFUL_ACCESS_TOKEN: ${{ secrets.CONTENTFUL_ACCESS_TOKEN }}
         if: steps.cache-build.outputs.cache-hit != 'true'
         run: npm run build
 
@@ -90,6 +96,7 @@ jobs:
     name: Deploy
     needs: [cd-build]
     runs-on: ubuntu-latest
+    
     steps:
       - name: Check out repository code
         uses: actions/checkout@v2
@@ -99,6 +106,9 @@ jobs:
         run: npm ci
 
       - name: Run build & export command (if not cached)
+        env:
+          CONTENTFUL_SPACE_ID: ${{ secrets.CONTENTFUL_SPACE_ID }}
+          CONTENTFUL_ACCESS_TOKEN: ${{ secrets.CONTENTFUL_ACCESS_TOKEN }}
         if: steps.cache-build.outputs.cache-hit != 'true'
         run: npm run build
 
