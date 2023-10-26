@@ -8,6 +8,7 @@ on:
   pull_request:
     branches: [main]
   repository_dispatch:
+    types: [contentful.deploy]
 
 jobs:
   ci-verify-lint-prettier-test:
@@ -95,6 +96,9 @@ jobs:
 
       - name: Install Dependencies
         run: npm ci
+
+      - name: Set Environment Variables 
+        run : echo "NETLIFY_NEXT_PLUGIN_SKIP=true" >> $GITHUB_ENV
 
       - name: Run build & export command
         run: npm run build
