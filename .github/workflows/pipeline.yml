@@ -2,12 +2,13 @@ name: CI/CD Pipeline
 
 on:
   schedule:
-    - cron: '0 0 * * *'
+    - cron: '20 10 * * *'
   push:
     branches: ["**"]
   pull_request:
     branches: [main]
   repository_dispatch:
+    types: [contentful.deploy]
 
 jobs:
   ci-verify-lint-prettier-test:
