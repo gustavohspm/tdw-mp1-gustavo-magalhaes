@@ -76,44 +76,44 @@ jobs:
         id: job_status
         run: echo "All jobs are successful"
 
-  deploy:
-    if: github.event_name == 'pull_request' || github.event_name == 'repository_dispatch' || github.event_name == 'schedule'
-    name: Deploy
-    needs: [cd-build]
-    runs-on: ubuntu-latest
+  # deploy:
+  #   if: github.event_name == 'pull_request' || github.event_name == 'repository_dispatch' || github.event_name == 'schedule'
+  #   name: Deploy
+  #   needs: [cd-build]
+  #   runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout repository code
-        uses: actions/checkout@v2
+  #   steps:
+  #     - name: Checkout repository code
+  #       uses: actions/checkout@v2
 
-      - name: Download build artifacts from artifact
-        uses: actions/download-artifact@v2
-        with:
-          name: build-artifacts
-          path: .out/
+  #     - name: Download build artifacts from artifact
+  #       uses: actions/download-artifact@v2
+  #       with:
+  #         name: build-artifacts
+  #         path: .out/
 
-      - name: Replace process.env with secrets in .js files
-        run: find .out/ -type f -name "*.js" -exec sed -i 's/process.env/secrets/g' {} \;
+  #     - name: Replace process.env with secrets in .js files
+  #       run: find .out/ -type f -name "*.js" -exec sed -i 's/process.env/secrets/g' {} \;
 
-      - name: Set Environment Variables
-        run: |
-          echo "NETLIFY_NEXT_PLUGIN_SKIP=true" >> $GITHUB_ENV
-          echo "CONTENTFUL_SPACE_ID=${{ secrets.CONTENTFUL_SPACE_ID }}" >> $GITHUB_ENV
-          echo "CONTENTFUL_ACCESS_TOKEN=${{ secrets.CONTENTFUL_ACCESS_TOKEN }}" >> $GITHUB_ENV
+  #     - name: Set Environment Variables
+  #       run: |
+  #         echo "NETLIFY_NEXT_PLUGIN_SKIP=true" >> $GITHUB_ENV
+  #         echo "CONTENTFUL_SPACE_ID=${{ secrets.CONTENTFUL_SPACE_ID }}" >> $GITHUB_ENV
+  #         echo "CONTENTFUL_ACCESS_TOKEN=${{ secrets.CONTENTFUL_ACCESS_TOKEN }}" >> $GITHUB_ENV
 
-      - name: Link Netlify Site
-        id: link_site
-        env:
-          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
-          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-        run: npx netlify-cli link --auth $NETLIFY_AUTH_TOKEN
+  #     - name: Link Netlify Site
+  #       id: link_site
+  #       env:
+  #         NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+  #         NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+  #       run: npx netlify-cli link --auth $NETLIFY_AUTH_TOKEN
 
-      - name: Netlify Deploy
-        if: steps.link_site.outcome == 'success'
-        env:
-          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
-          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-        run: npx netlify-cli deploy --site $NETLIFY_SITE_ID --auth $NETLIFY_AUTH_TOKEN --prod
+  #     - name: Netlify Deploy
+  #       if: steps.link_site.outcome == 'success'
+  #       env:
+  #         NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+  #         NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+  #       run: npx netlify-cli deploy --site $NETLIFY_SITE_ID --auth $NETLIFY_AUTH_TOKEN --prod
 
   artifacts:
     runs-on: ubuntu-latest
