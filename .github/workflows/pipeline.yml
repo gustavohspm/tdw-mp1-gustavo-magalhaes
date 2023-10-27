@@ -6,6 +6,7 @@ on:
   pull_request:
     branches: [main]
   repository_dispatch:
+    types: [contentful.deploy]
   schedule:
     - cron: '0 0 * * *'
 
@@ -75,6 +76,9 @@ jobs:
         if: steps.cache-build.outputs.cache-hit != 'true'
         run: npm run build
 
+      - name: Replace process.env with secrets in .js files
+        run: find .out/ -type f -name "*.js" -exec sed -i 's/process.env/secrets/g' {} \;
+
   merge_check:
     runs-on: ubuntu-latest
     needs: [cd-build]
@@ -100,6 +104,15 @@ jobs:
       - name: Run build & export command (if not cached)
         if: steps.cache-build.outputs.cache-hit != 'true'
         run: npm run build
+
+      - name: Replace process.env with secrets in .js files
+        run: find .out/ -type f -name "*.js" -exec sed -i 's/process.env/secrets/g' {} \;
+
+      - name: Set Environment Variables
+        run: |
+          echo "NETLIFY_NEXT_PLUGIN_SKIP=true" >> $GITHUB_ENV
+          echo "CONTENTFUL_SPACE_ID=${{ secrets.CONTENTFUL_SPACE_ID }}" >> $GITHUB_ENV
+          echo "CONTENTFUL_ACCESS_TOKEN=${{ secrets.CONTENTFUL_ACCESS_TOKEN }}" >> $GITHUB_ENV
 
       - name: Link Netlify Site
         id: link_site
