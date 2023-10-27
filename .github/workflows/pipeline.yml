@@ -8,7 +8,7 @@ on:
   repository_dispatch:
     types: [contentful.deploy]
   schedule:
-    - cron: '0 0 * * *'
+    - cron: "0 0 * * *"
 
 jobs:
   ci-verify-lint-prettier-test:
@@ -37,7 +37,7 @@ jobs:
 
       - name: Run prettier command
         run: npm run prettier
-        
+
       - name: Run lint command
         run: npm run lint
 
