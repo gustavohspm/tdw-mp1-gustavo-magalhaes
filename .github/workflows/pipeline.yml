@@ -6,8 +6,9 @@ on:
   pull_request:
     branches: [main]
   repository_dispatch:
+    types: [contentful.deploy]
   schedule:
-    - cron: '0 0 * * *'
+    - cron: "0 0 * * *"
 
 jobs:
   ci-verify-lint-prettier-test:
@@ -15,90 +16,38 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Setup Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version: "18.x"
-
-      - name: Cache dependencies
-        uses: actions/cache@v2
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
 
       - name: Install dependencies
         run: npm ci
 
       - name: Run prettier command
         run: npm run prettier
-        
+
       - name: Run lint command
         run: npm run lint
 
       - name: Run test command
         run: npm run test
 
-  cd-build:
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
-    needs: [ci-verify-lint-prettier-test]
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: "18.x"
-      
-      - name: Cache dependencies and build artifacts
-        id: cache-build
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.npm
-            .next/cache
-          key: ${{ runner.os }}-build-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-build-
-
-      - name: Install dependencies (if not cached)
-        if: steps.cache-build.outputs.cache-hit != 'true'
-        run: npm ci
-
-      - name: Run build & export command (if not cached)
-        if: steps.cache-build.outputs.cache-hit != 'true'
-        run: npm run build
-
-  merge_check:
-    runs-on: ubuntu-latest
-    needs: [cd-build]
-
-    steps:
-      - name: Check Job Status
-        id: job_status
-        run: echo "All jobs are successful"
-
   deploy:
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' && github.event.pull_request.base.ref == 'main' || github.event_name == 'repository_dispatch' || github.event_name == 'schedule'
     name: Deploy
-    needs: [cd-build]
+    needs: [ci-verify-lint-prettier-test]
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository code
         uses: actions/checkout@v2
 
-      - name: Install Dependencies (if not cached)
-        if: steps.cache-build.outputs.cache-hit != 'true'
+      - name: Install Dependencies
         run: npm ci
 
-      - name: Run build & export command (if not cached)
-        if: steps.cache-build.outputs.cache-hit != 'true'
+      - name: Run build & export command
         run: npm run build
 
       - name: Link Netlify Site
@@ -106,11 +55,21 @@ jobs:
         env:
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-        run: npx netlify-cli link --auth $NETLIFY_AUTH_TOKEN
+        run: npx netlify-cli link --auth $NETLIFY_AUTH_TOKEN   
 
-      - name: Netlify Deploy
+      - name: Deploy
         if: steps.link_site.outcome == 'success'
+        uses: actions/setup-node@v3
         env:
-          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
-          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-        run: npx netlify-cli deploy --site $NETLIFY_SITE_ID --auth $NETLIFY_AUTH_TOKEN --prod
+          CONTENTFUL_ACCESS_TOKEN: ${{ secrets.CONTENTFUL_ACCESS_TOKEN }}
+          CONTENTFUL_SPACE_ID: ${{ secrets.CONTENTFUL_SPACE_ID }}
+      - run: npx netlify-cli deploy --site ${{ secrets.NETLIFY_SITE_ID }} --auth ${{ secrets.NETLIFY_AUTH_TOKEN }} --prod
+
+  merge_check:
+    runs-on: ubuntu-latest
+    needs: [deploy]
+
+    steps:
+      - name: Check Job Status
+        id: job_status
+        run: echo "All jobs are successful"
