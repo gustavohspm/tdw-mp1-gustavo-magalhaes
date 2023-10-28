@@ -48,10 +48,10 @@ jobs:
         run: npm ci
 
       - name: Run build & export command
-        run: npm run build
         env:
           CONTENTFUL_ACCESS_TOKEN: ${{ secrets.CONTENTFUL_ACCESS_TOKEN }}
           CONTENTFUL_SPACE_ID: ${{ secrets.CONTENTFUL_SPACE_ID }} 
+        run: npm run build
 
       - name: Deploy
         uses: actions/setup-node@v3
