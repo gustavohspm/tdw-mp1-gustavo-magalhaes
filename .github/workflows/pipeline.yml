@@ -54,7 +54,6 @@ jobs:
           CONTENTFUL_SPACE_ID: ${{ secrets.CONTENTFUL_SPACE_ID }} 
 
       - name: Deploy
-        if: steps.link_site.outcome == 'success'
         uses: actions/setup-node@v3
       - run: npx netlify-cli deploy --site ${{ secrets.NETLIFY_SITE_ID }} --auth ${{ secrets.NETLIFY_AUTH_TOKEN }} --prod
 
