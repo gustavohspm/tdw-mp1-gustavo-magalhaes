@@ -7,5 +7,4 @@ module.exports = {
   },
   assetPrefix: '/',
   output: "export",
-  distDir: 'out',
 }

@@ -59,7 +59,15 @@ jobs:
       - name: Run build & export command
         run: npm run build
 
+      - name: Link Netlify Site
+        id: link_site
+        env:
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+        run: npx netlify-cli link --auth $NETLIFY_AUTH_TOKEN   
+
       - name: Deploy
+        if: steps.link_site.outcome == 'success'
         uses: actions/setup-node@v3
         env:
           CONTENTFUL_ACCESS_TOKEN: ${{ secrets.CONTENTFUL_ACCESS_TOKEN }}
